@@ -1,0 +1,108 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MiniArcade — Juegos</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<header>
+  <div class="logo">MINI<span>ARCADE</span></div>
+  <div class="stats">
+    <div class="stat">🕹️ <strong>5</strong> juegos</div>
+    <div class="stat">⭐ Puntuación: <strong id="total-score">0</strong></div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <div class="sidebar">
+    <div class="sidebar-label">Juegos</div>
+
+    <div class="game-card active" onclick="switchGame('snake')" id="card-snake">
+      <div class="card-top">
+        <div class="card-icon" style="background: rgba(6,214,160,0.15);">🐍</div>
+        <div class="card-name">Snake</div>
+      </div>
+      <div class="card-desc">Come manzanas, crece y no chocques</div>
+      <div class="card-status" id="status-snake">EN CURSO</div>
+    </div>
+
+    <div class="game-card" onclick="switchGame('tetris')" id="card-tetris">
+      <div class="card-top">
+        <div class="card-icon" style="background: rgba(255,209,102,0.15);">🟦</div>
+        <div class="card-name">Tetris</div>
+      </div>
+      <div class="card-desc">Encaja los bloques y completa filas</div>
+      <div class="card-status" id="status-tetris"></div>
+    </div>
+
+    <div class="game-card" onclick="switchGame('pong')" id="card-pong">
+      <div class="card-top">
+        <div class="card-icon" style="background: rgba(17,138,178,0.15);">🏓</div>
+        <div class="card-name">Pong</div>
+      </div>
+      <div class="card-desc">Clásico ping-pong contra la IA</div>
+      <div class="card-status" id="status-pong"></div>
+    </div>
+
+    <div class="game-card" onclick="switchGame('breakout')" id="card-breakout">
+      <div class="card-top">
+        <div class="card-icon" style="background: rgba(255,107,107,0.15);">🧱</div>
+        <div class="card-name">Breakout</div>
+      </div>
+      <div class="card-desc">Rompe todos los bloques con la bola</div>
+      <div class="card-status" id="status-breakout"></div>
+    </div>
+
+    <div class="game-card" onclick="switchGame('memory')" id="card-memory">
+      <div class="card-top">
+        <div class="card-icon" style="background: rgba(165,110,255,0.15);">🃏</div>
+        <div class="card-name">Memory</div>
+      </div>
+      <div class="card-desc">Encuentra los pares de cartas</div>
+      <div class="card-status" id="status-memory"></div>
+    </div>
+  </div>
+
+  <div class="game-area">
+    <div class="game-wrapper">
+      <div class="game-frame" id="game-frame">
+        <div class="game-title-bar">
+          <div class="title-dots">
+            <div class="title-dot dot-r"></div>
+            <div class="title-dot dot-y"></div>
+            <div class="title-dot dot-g"></div>
+          </div>
+          <div class="title-name" id="frame-title">SNAKE</div>
+          <div class="title-score">SCORE: <span id="score-display">0</span></div>
+        </div>
+        <div class="game-canvas-wrap" id="canvas-wrap">
+          <canvas id="game-canvas"></canvas>
+        </div>
+        <div id="memory-container" style="display:none; padding:20px; width:480px;"></div>
+        <div class="overlay" id="game-overlay">
+          <div class="pixel-corner pc-tl"></div>
+          <div class="pixel-corner pc-br"></div>
+          <h2 id="overlay-title">SNAKE</h2>
+          <p id="overlay-desc">Usa las flechas del teclado para mover la serpiente.<br>Come las manzanas para crecer.</p>
+          <button class="btn-start" id="btn-start" onclick="startCurrentGame()">▶ INICIAR</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-bar">
+    <div class="key-hint"><kbd>↑↓←→</kbd> Mover</div>
+    <div class="key-hint"><kbd>P</kbd> Pausar</div>
+    <div class="key-hint"><kbd>R</kbd> Reiniciar</div>
+    <div class="info-right" id="info-extra">Nivel: <strong id="level-display">1</strong></div>
+  </div>
+
+</div>
+<script src="script.js"></script>
+<link rel="stylesheet" href="style.css">
+</body>
+</html>
