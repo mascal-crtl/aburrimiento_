@@ -369,7 +369,9 @@
   .pc-br { bottom: 0; right: 0; }
 
 
-  /* RESPONSIVE — MiniArcade */
+  /* ============================================================
+     RESPONSIVO — MiniArcade
+  ============================================================ */
 
   /* ── Tablet ancho (≤ 1024px) ── */
   @media (max-width: 1024px) {
@@ -383,7 +385,7 @@
 
   /* ── Tablet (≤ 768px) ── */
   @media (max-width: 768px) {
-    /* Header compacto */
+    /* Cabecera compacta */
     header {
       padding: 12px 16px;
       gap: 10px;
@@ -398,7 +400,7 @@
       font-size: 11px;
     }
 
-    /* Layout: columna única */
+    /* Disposición: columna única */
     .layout {
       display: flex;
       flex-direction: column;
@@ -406,7 +408,7 @@
       min-height: calc(100vh - 56px);
     }
 
-    /* Sidebar → barra horizontal con scroll */
+    /* Barra lateral → barra horizontal con scroll */
     .sidebar {
       flex-direction: row;
       overflow-x: auto;
@@ -461,13 +463,13 @@
       min-height: 360px;
     }
 
-    /* Frame del juego */
+    /* Marco del juego */
     .game-frame {
       width: 100% !important;
       max-width: 100%;
     }
 
-    /* Canvas y memory container: se escala via JS,
+    /* Canvas y contenedor memory: se escalan via JS,
        pero el wrapper no debe desbordarse */
     .game-canvas-wrap {
       overflow: hidden;
@@ -481,7 +483,7 @@
       box-sizing: border-box;
     }
 
-    /* Info bar */
+    /* Barra de info */
     .info-bar {
       flex-wrap: wrap;
       gap: 8px;
@@ -549,7 +551,9 @@
     }
   }
 
-  /* TOUCH CONTROLS — botones virtuales D-pad */
+  /* ══════════════════════════════════════════════
+   CONTROLES TÁCTILES — botones virtuales D-pad
+   ══════════════════════════════════════════════ */
 
 .tBtn {
   width: 56px;
