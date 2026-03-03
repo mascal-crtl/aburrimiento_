@@ -1,4 +1,4 @@
-// ─── GLOBAL STATE ───────────────────────────────────────────────────────────
+// ─── ESTADO GLOBAL ──────────────────────────────────────────────────────────
 let currentGame = 'snake';
 let gameScore = 0;
 let totalScore = 0;
@@ -9,7 +9,7 @@ let gamePaused = false;
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
 
-// ─── GAME CONFIGS ────────────────────────────────────────────────────────────
+// ─── CONFIGURACIÓN DE JUEGOS ────────────────────────────────────────────────
 const GAMES = {
   snake:    { title: 'SNAKE',    color: '#06d6a0', desc: 'Usa las flechas del teclado para mover la serpiente.<br>Come las manzanas para crecer y no chocques con las paredes.', keys: '<kbd>↑↓←→</kbd> Mover', w: 480, h: 480 },
   tetris:   { title: 'TETRIS',   color: '#ffd166', desc: 'Usa las flechas para mover y rotar los bloques.<br>Completa filas horizontales para eliminarlas.', keys: '<kbd>↑</kbd> Rotar &nbsp; <kbd>←→</kbd> Mover &nbsp; <kbd>↓</kbd> Bajar', w: 320, h: 480 },
@@ -18,15 +18,30 @@ const GAMES = {
   memory:   { title: 'MEMORY',   color: '#a56eff', desc: 'Haz clic en las cartas para voltearlas.<br>Encuentra todos los pares iguales.', keys: '<kbd>Click</kbd> para voltear carta', w: 480, h: 480 },
 };
 
-// ─── SWITCH GAME ─────────────────────────────────────────────────────────────
+// ─── CAMBIAR DE JUEGO ───────────────────────────────────────────────────────
+// ─── ESCALAR CANVAS ─────────────────────────────────────────────────────────
+function scaleCanvas() {
+  const wrap = document.getElementById('canvas-wrap');
+  if (!wrap || canvas.style.display === 'none') return;
+  const maxW = wrap.clientWidth || window.innerWidth - 32;
+  const maxH = window.innerHeight * 0.65;
+  const scaleX = maxW / canvas.width;
+  const scaleY = maxH / canvas.height;
+  const scale = Math.min(scaleX, scaleY, 1); // nunca agrandar más del tamaño original
+  canvas.style.width  = Math.floor(canvas.width  * scale) + 'px';
+  canvas.style.height = Math.floor(canvas.height * scale) + 'px';
+}
+
+window.addEventListener('resize', scaleCanvas);
+
 function switchGame(name) {
   stopCurrentGame();
   
-  // Update sidebar cards
+  // Actualizar tarjetas del panel lateral
   document.querySelectorAll('.game-card').forEach(c => c.classList.remove('active'));
   document.getElementById('card-' + name).classList.add('active');
   
-  // Update old active status
+  // Actualizar estado activo anterior
   if (currentGame) {
     const oldStatus = document.getElementById('status-' + currentGame);
     if (oldStatus) oldStatus.textContent = '';
@@ -36,11 +51,13 @@ function switchGame(name) {
   currentGame = name;
   const g = GAMES[name];
   
-  // Resize canvas
+  // Redimensionar canvas
   canvas.width = g.w;
   canvas.height = g.h;
+  canvas.style.width  = '';
+  canvas.style.height = '';
   
-  // Show/hide memory div
+  // Mostrar/ocultar contenedor de memory
   const memDiv = document.getElementById('memory-container');
   const canvasWrap = document.getElementById('canvas-wrap');
   if (name === 'memory') {
@@ -53,7 +70,10 @@ function switchGame(name) {
     memDiv.style.display = 'none';
   }
   
-  // Update UI
+  // Escalar canvas para que encaje en móvil
+  setTimeout(scaleCanvas, 50);
+  
+  // Actualizar interfaz
   document.getElementById('frame-title').textContent = g.title;
   document.getElementById('frame-title').style.color = g.color;
   document.getElementById('overlay-title').textContent = g.title;
@@ -61,7 +81,7 @@ function switchGame(name) {
   document.getElementById('overlay-desc').innerHTML = g.desc;
   document.getElementById('info-extra').querySelector('strong') && (document.getElementById('score-display').textContent = '0');
   
-  // Update key hints
+  // Actualizar atajos de teclado
   document.querySelector('.info-bar').innerHTML = `
     <div class="key-hint">${g.keys}</div>
     <div class="key-hint"><kbd>P</kbd> Pausar</div>
@@ -102,6 +122,7 @@ function startCurrentGame() {
   if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
   setTimeout(createTouchPad, 100);
 }
+  setTimeout(scaleCanvas, 50);
 }
 
 function stopCurrentGame() {
@@ -121,7 +142,7 @@ function gameOver(msg = 'GAME OVER', score = gameScore) {
   removeTouchPad();
 }
 
-// ─── KEY HANDLING ─────────────────────────────────────────────────────────────
+// ─── MANEJO DE TECLADO ──────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
   if (e.key === 'p' || e.key === 'P') {
     if (!gameRunning && !gamePaused) return;
@@ -141,17 +162,19 @@ document.addEventListener('keydown', e => {
       startCurrentGame();
     }
   }
-  // Pass keys to games
+  // Pasar teclas a los juegos
   if (currentGame === 'snake') snakeKey(e);
   if (currentGame === 'tetris') tetrisKey(e);
   if (currentGame === 'pong') pongKey(e);
   if (currentGame === 'breakout') breakoutKey(e);
 });
 
-//   SNAKE  
 
+// ══════════════════════════════════════════════════════
+// ░░░  SNAKE  ░░░
+// ══════════════════════════════════════════════════════
 let snake, snakeDir, snakeFood, snakeTimer, snakeSpeed, snakeGrow;
-const SZ = 20; // cell size
+const SZ = 20; // tamaño de celda
 
 function initSnake() {
   const cols = canvas.width / SZ;
@@ -208,9 +231,9 @@ function snakeLoop(ts = 0) {
   const cols = canvas.width / SZ;
   const rows = canvas.height / SZ;
   
-  // Wall collision
+  // Colisión con paredes
   if (head.x < 0 || head.x >= cols || head.y < 0 || head.y >= rows) { gameOver(); return; }
-  // Self collision
+  // Colisión consigo mismo
   if (snake.some(s => s.x === head.x && s.y === head.y)) { gameOver(); return; }
   
   snake.unshift(head);
@@ -230,20 +253,20 @@ function drawSnake() {
   ctx.fillStyle = '#0f0e17';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   
-  // Grid
+  // Cuadrícula
   ctx.strokeStyle = 'rgba(255,255,255,0.03)';
   ctx.lineWidth = 1;
   for (let x = 0; x < canvas.width; x += SZ) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
   for (let y = 0; y < canvas.height; y += SZ) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
   
-  // Food
+  // Comida
   ctx.fillStyle = '#ff6b6b';
   ctx.shadowColor = '#ff6b6b';
   ctx.shadowBlur = 15;
   ctx.fillRect(snakeFood.x * SZ + 2, snakeFood.y * SZ + 2, SZ - 4, SZ - 4);
   ctx.shadowBlur = 0;
   
-  // Snake
+  // Serpiente
   snake.forEach((seg, i) => {
     const ratio = 1 - (i / snake.length) * 0.6;
     ctx.fillStyle = i === 0 ? '#06d6a0' : `rgba(6,214,160,${ratio})`;
@@ -254,8 +277,10 @@ function drawSnake() {
   ctx.shadowBlur = 0;
 }
 
-//   TETRIS  
 
+// ══════════════════════════════════════════════════════
+// ░░░  TETRIS  ░░░
+// ══════════════════════════════════════════════════════
 const TCOLS = 10, TROWS = 20, TS = 24;
 const TCOLORS = ['#ff6b6b','#ffd166','#06d6a0','#118ab2','#a56eff','#ff9f43','#00cec9'];
 const TPIECES = [
@@ -307,7 +332,7 @@ function tLock() {
       if (tPiece[r][c] && tY + r >= 0)
         tBoard[tY + r][tX + c] = tPieceColor;
   
-  // Clear lines
+  // Limpiar filas completas
   let cleared = 0;
   for (let r = TROWS - 1; r >= 0; r--) {
     if (tBoard[r].every(c => c)) {
@@ -375,17 +400,17 @@ function drawTetris() {
   ctx.fillStyle = '#0f0e17';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   
-  // Board bg
+  // Fondo del tablero
   ctx.fillStyle = '#0a0912';
   ctx.fillRect(0, 0, W, H);
   
-  // Grid lines
+  // Líneas de cuadrícula
   ctx.strokeStyle = 'rgba(255,255,255,0.03)';
   ctx.lineWidth = 1;
   for (let c = 0; c <= TCOLS; c++) { ctx.beginPath(); ctx.moveTo(c*TS,0); ctx.lineTo(c*TS,H); ctx.stroke(); }
   for (let r = 0; r <= TROWS; r++) { ctx.beginPath(); ctx.moveTo(0,r*TS); ctx.lineTo(W,r*TS); ctx.stroke(); }
   
-  // Board pieces
+  // Piezas fijadas en el tablero
   for (let r = 0; r < TROWS; r++)
     for (let c = 0; c < TCOLS; c++)
       if (tBoard[r][c]) {
@@ -395,7 +420,7 @@ function drawTetris() {
         ctx.fillRect(c*TS+1, r*TS+1, TS-2, 4);
       }
   
-  // Ghost piece
+  // Pieza fantasma
   let gy = tY;
   while (tValid(tPiece, tX, gy+1)) gy++;
   for (let r = 0; r < tPiece.length; r++)
@@ -405,7 +430,7 @@ function drawTetris() {
         ctx.fillRect((tX+c)*TS+1, (gy+r)*TS+1, TS-2, TS-2);
       }
   
-  // Current piece
+  // Pieza actual
   for (let r = 0; r < tPiece.length; r++)
     for (let c = 0; c < tPiece[r].length; c++)
       if (tPiece[r][c] && tY+r >= 0) {
@@ -418,7 +443,7 @@ function drawTetris() {
         ctx.fillRect((tX+c)*TS+1, (tY+r)*TS+1, TS-2, 4);
       }
   
-  // Side panel
+  // Panel lateral
   const px = W + 10;
   ctx.fillStyle = 'rgba(255,255,255,0.4)';
   ctx.font = '10px "Press Start 2P"';
@@ -435,8 +460,10 @@ function drawTetris() {
   ctx.fillText(tLines, px, 100);
 }
 
-//   PONG  
 
+// ══════════════════════════════════════════════════════
+// ░░░  PONG  ░░░
+// ══════════════════════════════════════════════════════
 let pPaddle, aBall, pScore, aScore, pKeys;
 
 function initPong() {
@@ -468,27 +495,27 @@ function pongLoop(ts = 0) {
   if (!st) return;
   const { aiPaddle, ball } = st;
   
-  // Player movement
+  // Movimiento del jugador
   const speed = 6;
   if (pKeys['ArrowUp'] || pKeys['w'] || pKeys['W']) st.pPaddle.y = Math.max(0, st.pPaddle.y - speed);
   if (pKeys['ArrowDown'] || pKeys['s'] || pKeys['S']) st.pPaddle.y = Math.min(canvas.height - st.pPaddle.h, st.pPaddle.y + speed);
   
-  // AI movement
+  // Movimiento de la IA
   const aiCenter = aiPaddle.y + aiPaddle.h/2;
   const aiTarget = ball.y;
   const aiSpeed = 3.5;
   if (aiCenter < aiTarget - 5) aiPaddle.y = Math.min(canvas.height - aiPaddle.h, aiPaddle.y + aiSpeed);
   if (aiCenter > aiTarget + 5) aiPaddle.y = Math.max(0, aiPaddle.y - aiSpeed);
   
-  // Ball movement
+  // Movimiento de la pelota
   ball.x += ball.vx;
   ball.y += ball.vy;
   
-  // Top/bottom bounce
+  // Rebote arriba/abajo
   if (ball.y - ball.r < 0) { ball.y = ball.r; ball.vy *= -1; }
   if (ball.y + ball.r > canvas.height) { ball.y = canvas.height - ball.r; ball.vy *= -1; }
   
-  // Player paddle
+  // Paleta del jugador
   if (ball.x - ball.r < 24 && ball.y > st.pPaddle.y && ball.y < st.pPaddle.y + st.pPaddle.h) {
     ball.vx = Math.abs(ball.vx) * 1.05;
     ball.vy += ((ball.y - (st.pPaddle.y + st.pPaddle.h/2)) / st.pPaddle.h * 2) * 2;
@@ -497,13 +524,13 @@ function pongLoop(ts = 0) {
     updateScore(st.pScore);
   }
   
-  // AI paddle
+  // Paleta de la IA
   if (ball.x + ball.r > canvas.width - 24 && ball.y > aiPaddle.y && ball.y < aiPaddle.y + aiPaddle.h) {
     ball.vx = -Math.abs(ball.vx) * 1.02;
     ball.vy += ((ball.y - (aiPaddle.y + aiPaddle.h/2)) / aiPaddle.h * 2) * 2;
   }
   
-  // Score
+  // Marcador
   if (ball.x < 0) {
     st.aScore++;
     if (st.aScore >= 7) { gameOver('PERDISTE', st.pScore); return; }
@@ -523,14 +550,14 @@ function drawPong(st) {
   ctx.fillStyle = '#0f0e17';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   
-  // Center line
+  // Línea central
   ctx.setLineDash([8, 8]);
   ctx.strokeStyle = 'rgba(255,255,255,0.1)';
   ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(canvas.width/2, 0); ctx.lineTo(canvas.width/2, canvas.height); ctx.stroke();
   ctx.setLineDash([]);
   
-  // Scores
+  // Puntuaciones
   ctx.fillStyle = 'rgba(255,255,255,0.3)';
   ctx.font = '32px "Press Start 2P"';
   ctx.textAlign = 'center';
@@ -538,7 +565,7 @@ function drawPong(st) {
   ctx.fillText(st.aScore, canvas.width/2 + 60, 50);
   ctx.textAlign = 'left';
   
-  // Paddles
+  // Paletas
   ctx.fillStyle = '#118ab2';
   ctx.shadowColor = '#118ab2';
   ctx.shadowBlur = 15;
@@ -549,7 +576,7 @@ function drawPong(st) {
   ctx.fillRect(canvas.width - 24, st.aiPaddle.y, 10, st.aiPaddle.h);
   ctx.shadowBlur = 0;
   
-  // Ball
+  // Pelota
   ctx.fillStyle = '#ffd166';
   ctx.shadowColor = '#ffd166';
   ctx.shadowBlur = 20;
@@ -559,8 +586,10 @@ function drawPong(st) {
   ctx.shadowBlur = 0;
 }
 
-//   BREAKOUT  
 
+// ══════════════════════════════════════════════════════
+// ░░░  BREAKOUT  ░░░
+// ══════════════════════════════════════════════════════
 let bPaddle, bBall, bBricks, bLives;
 
 function initBreakout() {
@@ -606,19 +635,19 @@ function breakoutLoop() {
   bBall.x += bBall.vx;
   bBall.y += bBall.vy;
   
-  // Walls
+  // Paredes
   if (bBall.x - bBall.r < 0) { bBall.x = bBall.r; bBall.vx *= -1; }
   if (bBall.x + bBall.r > canvas.width) { bBall.x = canvas.width - bBall.r; bBall.vx *= -1; }
   if (bBall.y - bBall.r < 0) { bBall.y = bBall.r; bBall.vy *= -1; }
   
-  // Paddle
+  // Paleta
   if (bBall.y + bBall.r >= bPaddle.y && bBall.y + bBall.r <= bPaddle.y + bPaddle.h &&
       bBall.x >= bPaddle.x && bBall.x <= bPaddle.x + bPaddle.w) {
     bBall.vy = -Math.abs(bBall.vy);
     bBall.vx += ((bBall.x - (bPaddle.x + bPaddle.w/2)) / (bPaddle.w/2)) * 2;
   }
   
-  // Bottom
+  // Suelo
   if (bBall.y > canvas.height + 20) {
     bLives--;
     if (bLives <= 0) { gameOver('GAME OVER', gameScore); return; }
@@ -626,7 +655,7 @@ function breakoutLoop() {
     bBall.vx = 3; bBall.vy = -4;
   }
   
-  // Bricks
+  // Bloques
   bBricks.forEach(br => {
     if (!br.alive) return;
     if (bBall.x + bBall.r > br.x && bBall.x - bBall.r < br.x + br.w &&
@@ -646,14 +675,14 @@ function drawBreakout() {
   ctx.fillStyle = '#0f0e17';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   
-  // Lives
+  // Vidas
   ctx.fillStyle = '#ff6b6b';
   ctx.font = '10px "Press Start 2P"';
   for (let i = 0; i < bLives; i++) {
     ctx.fillText('♥', 12 + i * 22, 20);
   }
   
-  // Bricks
+  // Bloques
   bBricks.forEach(br => {
     if (!br.alive) return;
     ctx.fillStyle = br.color;
@@ -665,7 +694,7 @@ function drawBreakout() {
     ctx.shadowBlur = 0;
   });
   
-  // Paddle
+  // Paleta
   ctx.fillStyle = '#ff6b6b';
   ctx.shadowColor = '#ff6b6b';
   ctx.shadowBlur = 12;
@@ -674,7 +703,7 @@ function drawBreakout() {
   ctx.fill();
   ctx.shadowBlur = 0;
   
-  // Ball
+  // Pelota
   ctx.fillStyle = '#ffd166';
   ctx.shadowColor = '#ffd166';
   ctx.shadowBlur = 16;
@@ -684,9 +713,11 @@ function drawBreakout() {
   ctx.shadowBlur = 0;
 }
 
-//   TOUCH CONTROLS  
+// ══════════════════════════════════════════════════════
+// ░░░  TOUCH CONTROLS  ░░░
+// ══════════════════════════════════════════════════════
 
-// --- Swipe detection (Snake & Tetris) ---
+// --- Detección de swipe (Snake y Tetris) ---
 let touchStartX = 0, touchStartY = 0;
 
 document.addEventListener('touchstart', e => {
@@ -720,7 +751,7 @@ document.addEventListener('touchend', e => {
   }
 }, { passive: true });
 
-// --- Crear D-pad / botones virtuales ---
+// --- Crear D-pad y botones virtuales ---
 function createTouchPad() {
   removeTouchPad();
   const game = currentGame;
@@ -740,7 +771,7 @@ function createTouchPad() {
     padding: 0 16px;
   `;
 
-  // Snake & Tetris: D-pad con 4 flechas
+  // Snake y Tetris: D-pad con 4 flechas
   if (game === 'snake' || game === 'tetris') {
     pad.innerHTML = `
       <div style="display:grid;grid-template-columns:56px 56px 56px;grid-template-rows:56px 56px 56px;gap:6px;pointer-events:all">
@@ -807,7 +838,9 @@ function removeTouchPad() {
   if (old) old.remove();
 }
 
-//Memory
+// ══════════════════════════════════════════════════════
+// ░░░  MEMORY  ░░░
+// ══════════════════════════════════════════════════════
 const EMOJIS = ['🎮','🕹️','👾','🎲','🎯','🎪','🎨','🃏'];
 
 function initMemory() {
